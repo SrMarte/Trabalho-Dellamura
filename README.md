@@ -1,3 +1,19 @@
+Para rodar o simulador:
+
+1.Prepare os arquivos:
+automaton_diagram.json: O diagrama do autômato.
+test_cases.txt: Os casos de teste.
+
+2.Rodar o script:
+Salve o código em um arquivo, por exemplo, automaton_simulator.js.
+Execute o script com o Node.js:
+
+node automaton_simulator.js
+
+3.Verifique o arquivo de saída (output.txt), que contém os resultados dos testes.
+
+Exemplo:
+
 automaton_diagram.json:
 {
   "initial": 0,
