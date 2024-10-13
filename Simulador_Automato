@@ -1,0 +1,102 @@
+const fs = require('fs');
+
+class Automaton {
+    constructor() {
+        this.initialState = 0;
+        this.transitions = new Map();
+        this.finalStates = new Set();
+    }
+
+    // Adiciona uma transição
+    addTransition(state, symbol, nextState) {
+        const key = `${state}-${symbol}`;
+        this.transitions.set(key, nextState);
+    }
+
+    // Adiciona um estado final
+    addFinalState(state) {
+        this.finalStates.add(state);
+    }
+
+    // Função de transição delta (δ)
+    delta(state, symbol) {
+        const key = `${state}-${symbol}`;
+        if (this.transitions.has(key)) {
+            return this.transitions.get(key);
+        }
+        return -1; // Se a transição não existir
+    }
+
+    // Função de transição estendida (entrada)
+    extendedTransition(state, input) {
+        if (input.length === 0) {
+            return state;
+        }
+
+        const symbol = input[0];
+        const remainingInput = input.slice(1);
+        const nextState = this.delta(state, symbol);
+        if (nextState === -1) {
+            return -1;
+        }
+        return this.extendedTransition(nextState, remainingInput);
+    }
+
+    // Função para rodar o autômato com uma entrada
+    run(input) {
+        const finalState = this.extendedTransition(this.initialState, input);
+        return this.finalStates.has(finalState);
+    }
+}
+
+// Função para carregar o autômato a partir de um arquivo JSON
+function loadAutomatonFromFile(filePath) {
+    const data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+    const automaton = new Automaton();
+    
+    automaton.initialState = data.initial;
+    
+    for (const transition of data.transitions) {
+        automaton.addTransition(parseInt(transition.from), transition.read, parseInt(transition.to));
+    }
+    
+    for (const finalState of data.final) {
+        automaton.addFinalState(finalState);
+    }
+    
+    return automaton;
+}
+
+// Função para rodar os testes a partir de um arquivo de entrada e gerar um arquivo de saída
+function runTests(automaton, testFilePath, outputFilePath) {
+    const testCases = fs.readFileSync(testFilePath, 'utf-8').split('\n');
+    const results = [];
+
+    for (const testCase of testCases) {
+        const [input, expected] = testCase.split(';');
+        const expectedResult = expected.trim();
+        
+        const startTime = Date.now();
+        const result = automaton.run(input.trim());
+        const endTime = Date.now();
+        
+        const resultInt = result ? "1" : "0";
+        const timeTaken = (endTime - startTime).toFixed(3);
+        
+        results.push(`Entrada: "${input.trim()}"; Esperado: ${expectedResult}; Resultado: ${resultInt}; Tempo: ${timeTaken}ms`);
+    }
+
+    fs.writeFileSync(outputFilePath, results.join("\n"));
+    console.log("Testes concluídos! Resultados gravados em", outputFilePath);
+}
+
+// Caminhos para os arquivos
+const automatonFile = './automaton_diagram.json';
+const testFile = './test_cases.txt';
+const outputFile = './output.txt';
+
+// Carregar o autômato a partir do arquivo
+const automaton = loadAutomatonFromFile(automatonFile);
+
+// Rodar os testes e gerar a saída
+runTests(automaton, testFile, outputFile);
